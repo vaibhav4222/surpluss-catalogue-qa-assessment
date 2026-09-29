@@ -1,271 +1,164 @@
-# Surpluss Catalogue QA Automation Assessment
+# Surpluss Catalogue — QA Automation Assessment
 
-QA automation assessment solution for the Surpluss catalogue application.
+This is a trimmed copy of an internal Surpluss tool: a **product catalogue
+builder**. Our sales team uses it to assemble catalogues of surplus inventory,
+share them with buyers, and collect enquiries.
 
-## Project Overview
+Everything here runs on your machine. It does not connect to any Surpluss
+system, and the data is entirely made up.
 
-This repository contains automated tests and QA documentation covering the main business and security risks identified in the catalogue application.
+Your brief is in **`ASSESSMENT.md`**. Read that first — this file only covers
+getting the thing running.
 
-The implementation focuses on:
-
-- Existing functional and security defects
-- High-risk unit/integration logic
-- API authentication and authorization
-- Cross-catalogue access control
-- Catalogue lifecycle and expiry behavior
-- End-to-end buyer enquiry flow
-- Testing strategy and risk-based decisions
-
-## Tech Stack
-
-- Next.js
-- TypeScript
-- Prisma
-- PostgreSQL
-- Vitest
-- Playwright
-- Zod
-
-## Prerequisites
-
-Install the following before running the project:
-
-- Node.js 20+
-- npm
-- PostgreSQL
+---
 
 ## Setup
 
-### 1. Install dependencies
-
-```bash
-npm install
-```
-
-### 2. Configure environment
-
-Copy the example environment file:
+You need **Node 20+** and **Docker**.
 
 ```bash
 cp .env.example .env
-```
-
-On Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Update `.env` with the local PostgreSQL connection details if required.
-
-### 3. Start PostgreSQL
-
-Make sure PostgreSQL is running and the database configured in `.env` is available.
-
-If Docker is preferred and Docker is installed:
-
-```bash
-docker compose up -d
-```
-
-### 4. Run database migrations
-
-```bash
-npx prisma migrate deploy
-```
-
-### 5. Seed the database
-
-```bash
-npx prisma db seed
-```
-
-The seed data contains published, draft, and expired catalogue scenarios used by the tests.
-
-## Run the Application
-
-```bash
-npm run dev
-```
-
-The application is configured to run locally on:
-
-```text
-http://localhost:3001
-```
-
-## Test Accounts
-
-The seeded application provides the following accounts for testing:
-
-### Admin
-
-```text
-Email: admin@catalogue.test
-Password: Admin#2026
-Role: Admin
-```
-
-### Staff
-
-```text
-Email: staff@catalogue.test
-Password: Staff#2026
-Role: Staff
-```
-
-Do not use these credentials outside the local assessment environment.
-
-## Automated Tests
-
-### Unit / Integration Tests
-
-Run Vitest with:
-
-```bash
-npm test
-```
-
-For watch mode:
-
-```bash
-npm run test:watch
-```
-
-The tests cover areas such as:
-
-- Catalogue status and expiry calculations
-- Pricing and discount calculations
-- Spreadsheet/import mapping validation
-- Enquiry validation
-- Admin authorization
-- Cross-catalogue listing access
-- Draft and expired catalogue access
-
-### Playwright E2E
-
-Install Playwright browsers if needed:
-
-```bash
-npx playwright install
-```
-
-Start the application first, then run:
-
-```bash
-npm run test:e2e
-```
-
-The E2E scenario covers the complete buyer journey:
-
-```text
-Published Catalogue
-        ↓
-Browse Product
-        ↓
-Add Product to Enquiry
-        ↓
-Submit Enquiry
-        ↓
-Admin Login
-        ↓
-Leads Inbox
-        ↓
-Verify Enquiry
-```
-
-## Assessment Findings
-
-`FINDINGS.md` documents the defects discovered during the assessment.
-
-Each finding contains:
-
-- Description of the defect
-- Reproduction steps
-- Expected behavior
-- Severity and business impact
-- Automated regression test
-
-The regression tests for existing defects are intentionally written to demonstrate the failure in the original buggy implementation. They should fail until the corresponding application defect is fixed.
-
-## Test Coverage
-
-The assessment prioritizes risk rather than attempting exhaustive coverage.
-
-### High-priority areas
-
-- Authentication and authorization
-- Admin vs Staff permissions
-- Catalogue lifecycle
-- Catalogue expiry
-- Cross-catalogue object access
-- Enquiry submission
-- Pricing and discount logic
-- Import validation
-
-### Deliberately limited areas
-
-Lower-risk areas such as exhaustive visual validation, every possible API permutation, and broad browser compatibility were not prioritized because the assessment asks for focused, risk-based coverage rather than maximum test count.
-
-The rationale is documented in `WRITEUP.md`.
-
-## Project Structure
-
-```text
-src/
-├── app/
-│   ├── admin/
-│   ├── api/
-│   └── catalogue/
-├── lib/
-└── ...
-
-tests/
-├── unit/
-├── api/
-└── findings/
-
-e2e/
-└── buyer-enquiry.spec.ts
-
-FINDINGS.md
-WRITEUP.md
-ASSESSMENT_RUN.md
-```
-
-## Useful Commands
-
-```bash
-# Install dependencies
 npm install
-
-# Start application
-npm run dev
-
-# Run unit/integration tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run Playwright tests
-npm run test:e2e
-
-# Run lint
-npm run lint
-
-# Run TypeScript checks
-npm run typecheck
-
-# Generate Prisma client
-npx prisma generate
-
-# Inspect database through Prisma Studio
-npx prisma studio
+docker compose up -d          # Postgres on localhost:5544
+npm run db:deploy             # apply migrations
+npm run db:seed               # load sample data and sign-in accounts
+npm run dev                   # http://localhost:3001
 ```
 
-## Notes
+To wipe and start over at any point:
 
-This solution intentionally does not remove or silently correct the application's existing defects. The purpose of the assessment is to identify those defects, document their business/security impact, and provide automated tests that demonstrate the failures.
+```bash
+npm run db:reset
+```
 
-Before submission, run the complete test suite locally and review every test and finding so that you can explain the reasoning, assertions, selectors, and expected behavior during the interview.
+### Sign-in accounts
+
+These are seeded local accounts. The passwords are in this file on purpose —
+the database is disposable and never leaves your laptop.
+
+| Email | Password | Role |
+| --- | --- | --- |
+| `admin@catalogue.test` | `Admin#2026` | admin |
+| `staff@catalogue.test` | `Staff#2026` | staff |
+
+**The two roles are not the same, and the difference matters.** `staff` is the
+sales team: they build catalogues, manage products and work leads. `admin` can
+additionally **publish** a catalogue and **delete** one — the two actions that
+either expose pricing to the public internet or destroy lead history.
+
+### If setup fails
+
+Email us. Losing two hours to a Docker problem tells us nothing about you as a
+tester, and we would rather unblock you than have you burn your time budget on
+it.
+
+---
+
+## Running the tests
+
+```bash
+npm run test          # Vitest — unit, integration, API
+npm run test:watch
+npm run test:e2e      # Playwright — starts the dev server itself
+npm run typecheck
+npm run lint
+```
+
+Vitest picks up `*.test.ts` under `src/` and `tests/`. Playwright looks in
+`e2e/`. Both are wired up and both currently find **nothing** — writing the
+tests is the exercise, so an empty run passing is expected, not a broken setup.
+
+`.env` is loaded for you in Vitest (see `vitest.setup.ts`), so tests that talk
+to the database work without extra wiring.
+
+For Playwright you will need the browser binaries once:
+
+```bash
+npx playwright install chromium
+```
+
+### Signing in from a test
+
+Auth.js needs a CSRF token before it will accept a sign-in, which is fiddly the
+first time. This is not the part we are assessing, so here it is:
+
+```bash
+# 1. token + cookie
+curl -s -c jar.txt http://localhost:3001/api/auth/csrf
+
+# 2. sign in (returns 302 and sets the session cookie)
+curl -s -b jar.txt -c jar.txt -X POST   http://localhost:3001/api/auth/callback/credentials   -d "csrfToken=<token from step 1>"   -d "email=staff@catalogue.test"   -d "password=Staff%232026"
+
+# 3. confirm who you are
+curl -s -b jar.txt http://localhost:3001/api/auth/session
+```
+
+In Playwright, signing in through the login form once and reusing
+`storageState` is usually simpler than the above.
+
+Server actions (the functions in `src/app/admin/*/actions.ts`) are easiest to
+test by importing them into Vitest and mocking `@/auth`.
+
+---
+
+## What the product does
+
+**Products** live in one shared library, keyed by SKU — name, brand, category,
+MRP, offer price, available quantity, MOQ, images.
+
+A **catalogue** is a named, ordered selection of those products with a public
+URL slug, for example `/catalogue/premium-corporate-essentials`. A catalogue is
+either **draft** or **published**, and may carry a **validity date**.
+
+- A **draft** catalogue is internal. Nobody outside the sales team should be
+  able to reach it or its contents.
+- A **published** catalogue is public — no login, anyone with the link.
+- A published catalogue **past its validity date** is closed: the pricing in it
+  is stale and must not be shown as if it were still on offer.
+
+**Buyers** browse a published catalogue without signing in, add products to an
+enquiry with quantities, and submit it with their contact details. Each item
+must respect that product's MOQ and available quantity.
+
+An **enquiry** lands in the admin **leads** inbox with a reference like
+`ENQ-24071`. Enquiry items store a price snapshot, so lead history survives
+later price edits.
+
+Admins can also **bulk import** products from a spreadsheet: upload a CSV, map
+its columns onto product fields, review the validation report, then commit.
+
+### Two things about the real world this lives in
+
+**Seller data is messy.** Inventory sheets arrive with inconsistent units,
+duplicate rows, blank prices, and prices written as `₹1,20,000 / piece` rather
+than a number.
+
+**Leaks cost money.** A draft catalogue reaching the public, or one buyer seeing
+another buyer's negotiated pricing, is a commercial problem — not a cosmetic
+one.
+
+---
+
+## Seeded data
+
+| Catalogue | Slug | State |
+| --- | --- | --- |
+| Premium corporate essentials | `premium-corporate-essentials` | published, no expiry |
+| Festive overstock 2026 — Northstar pricing | `festive-overstock-2026` | **draft**, confidential |
+| Monsoon clearance 2026 | `monsoon-clearance-2026` | published, **expired** |
+
+Plus 9 products and 19 enquiries against the live catalogue.
+
+---
+
+## Notes on the environment
+
+- **Image upload, email and WhatsApp are not configured**, on purpose. Those
+  code paths talk to AWS, SES and WATI. With the environment variables blank the
+  app degrades gracefully — uploads return `503`, notifications are skipped. You
+  do not need to sign up for anything.
+- The stack is Next.js (App Router) + TypeScript + Prisma + PostgreSQL, with
+  Auth.js for sign-in. Business logic sits in `src/lib/`, HTTP handlers in
+  `src/app/api/`, and server actions next to the pages that call them.
+- `npm run db:studio` opens Prisma Studio if you want to poke at the data
+  directly.
